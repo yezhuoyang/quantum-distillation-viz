@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm install -g pnpm@10.4.1 && pnpm install && pnpm build && cp server/simulation.py dist/simulation.py"
+buildCommand = "npm install -g pnpm@10.4.1 && npx pnpm install && npx pnpm build && cp server/simulation.py dist/simulation.py"
 
 [deploy]
 startCommand = "node dist/index.js"
