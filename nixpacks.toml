@@ -1,10 +1,9 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python311", "python311Packages.pip", "corepack"]
+nixPkgs = ["nodejs_20", "python311", "python311Packages.pip"]
 
 [phases.install]
 cmds = [
-  "corepack enable",
-  "corepack prepare pnpm@10.4.1 --activate",
+  "npm install -g pnpm@10.4.1",
   "pnpm install",
   "pip install --user qiskit qiskit-aer numpy"
 ]
