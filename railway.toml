@@ -1,9 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "pnpm install && pnpm build && cp server/simulation.py dist/simulation.py"
+buildCommand = "npm install -g pnpm@10.4.1 && pnpm install && pnpm build && cp server/simulation.py dist/simulation.py"
 
 [deploy]
-startCommand = "pnpm start"
+startCommand = "node dist/index.js"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
