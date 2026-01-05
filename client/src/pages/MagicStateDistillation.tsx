@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 /**
  * Design Philosophy: Holographic Quantum Aesthetic
  * - Purple gradients with glassmorphism
- * - Complete 15-to-1 circuit based on Reed-Muller code (NOT Steane!)
+ * - Complete 15-to-1 circuit based on Reed-Muller code
  * - Smooth animations reflecting quantum evolution
  */
 
@@ -90,7 +90,7 @@ export default function MagicStateDistillation() {
 
                 <TabsContent value="full" className="space-y-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold">15-to-1 |A_L⟩ Distillation Circuit</h3>
+                    <h3 className="text-xl font-semibold">15-to-1 Reed-Muller Circuit</h3>
                     <div className="flex gap-2">
                       <Button
                         onClick={handlePlayPause}
@@ -111,9 +111,9 @@ export default function MagicStateDistillation() {
                     </div>
                   </div>
 
-                  {/* Full 15-to-1 Circuit based on Reed-Muller code (Figure 33) */}
+                  {/* Full 15-to-1 Circuit based on Reed-Muller code */}
                   <div className="bg-black/30 rounded-lg p-6 overflow-x-auto">
-                    <svg viewBox="0 0 900 800" className="w-full h-auto">
+                    <svg viewBox="0 0 1000 800" className="w-full h-auto">
                       {/* Define styles */}
                       <defs>
                         <linearGradient id="wireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -130,11 +130,16 @@ export default function MagicStateDistillation() {
                         </filter>
                       </defs>
 
-                      {/* Qubit labels and wires - 16 qubits total */}
+                      {/* Qubit labels and wires - 16 qubits total (15 input + 1 output) */}
                       {Array.from({ length: 16 }, (_, i) => {
                         const y = 50 + i * 45;
-                        // First qubit is from Bell pair, next 14 are ancilla for encoding, last is other Bell pair qubit
-                        const label = i === 0 ? "|Φ⁺⟩₁" : i <= 14 ? "|0⟩" : "|Φ⁺⟩₂";
+                        // Define qubit labels based on the circuit diagram
+                        const qubitLabels = [
+                          "|+_L⟩", "|+_L⟩", "|g_L⟩", "|+_L⟩", "|g_L⟩", 
+                          "|g_L⟩", "|g_L⟩", "|+_L⟩", "|g_L⟩", "|g_L⟩", 
+                          "|g_L⟩", "|g_L⟩", "|g_L⟩", "|g_L⟩", "|g_L⟩", "|+_L⟩"
+                        ];
+                        const label = qubitLabels[i];
                         const isActive = currentStep > 0;
                         
                         return (
@@ -145,175 +150,349 @@ export default function MagicStateDistillation() {
                             </text>
                             {/* Wire */}
                             <line
-                              x1="80"
+                              x1="100"
                               y1={y}
-                              x2="850"
+                              x2="920"
                               y2={y}
                               stroke={isActive ? "url(#wireGradient)" : "#4C1D95"}
                               strokeWidth="2"
                               opacity={isActive ? 1 : 0.3}
                             />
                             {/* Qubit number on right */}
-                            <text x="860" y={y + 5} fill="#A78BFA" fontSize="12" fontFamily="JetBrains Mono">
+                            <text x="930" y={y + 5} fill="#A78BFA" fontSize="12" fontFamily="JetBrains Mono">
                               {i + 1}
                             </text>
                           </g>
                         );
                       })}
 
-                      {/* Step 1: Create Bell pair (shown as dashed box) */}
-                      {currentStep >= 0 && (
-                        <g opacity={currentStep >= 1 ? 1 : 0.3}>
-                          <rect x="100" y="35" width="80" height="650" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeDasharray="5,5" rx="4"/>
-                          <text x="140" y="25" fill="#E9D5FF" fontSize="11" textAnchor="middle" fontFamily="Space Grotesk">
-                            Bell Pair Creation
+                      {/* Step 1: Column 1 of CNOT gates */}
+                      {currentStep >= 1 && (
+                        <g opacity={currentStep >= 2 ? 1 : 0.5}>
+                          {/* CNOT patterns for column 1 based on the circuit diagram */}
+                          {/* Qubit 1 (index 0) controls qubit 16 (index 15) */}
+                          <g>
+                            <circle cx="180" cy="50" r="4" fill="#EC4899" filter="url(#glow)"/>
+                            <line x1="180" y1="50" x2="180" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <circle cx="180" cy="725" r="10" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="170" y1="725" x2="190" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <line x1="180" y1="715" x2="180" y2="735" stroke="#EC4899" strokeWidth="2"/>
+                          </g>
+                          {/* Qubit 2 (index 1) controls qubit 16 (index 15) */}
+                          <g>
+                            <circle cx="200" cy="95" r="4" fill="#EC4899" filter="url(#glow)"/>
+                            <line x1="200" y1="95" x2="200" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <circle cx="200" cy="725" r="10" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="190" y1="725" x2="210" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <line x1="200" y1="715" x2="200" y2="735" stroke="#EC4899" strokeWidth="2"/>
+                          </g>
+                          {/* Qubit 3 (index 2) controls qubit 16 (index 15) */}
+                          <g>
+                            <circle cx="220" cy="140" r="4" fill="#EC4899" filter="url(#glow)"/>
+                            <line x1="220" y1="140" x2="220" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <circle cx="220" cy="725" r="10" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="210" y1="725" x2="230" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <line x1="220" y1="715" x2="220" y2="735" stroke="#EC4899" strokeWidth="2"/>
+                          </g>
+                          {/* Qubit 4 (index 3) controls qubit 16 (index 15) */}
+                          <g>
+                            <circle cx="240" cy="185" r="4" fill="#EC4899" filter="url(#glow)"/>
+                            <line x1="240" y1="185" x2="240" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <circle cx="240" cy="725" r="10" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="230" y1="725" x2="250" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <line x1="240" y1="715" x2="240" y2="735" stroke="#EC4899" strokeWidth="2"/>
+                          </g>
+                          {/* Qubit 8 (index 7) controls qubit 16 (index 15) */}
+                          <g>
+                            <circle cx="260" cy="365" r="4" fill="#EC4899" filter="url(#glow)"/>
+                            <line x1="260" y1="365" x2="260" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <circle cx="260" cy="725" r="10" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="250" y1="725" x2="270" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <line x1="260" y1="715" x2="260" y2="735" stroke="#EC4899" strokeWidth="2"/>
+                          </g>
+                          {/* Qubit 15 (index 14) controls qubit 16 (index 15) */}
+                          <g>
+                            <circle cx="280" cy="680" r="4" fill="#EC4899" filter="url(#glow)"/>
+                            <line x1="280" y1="680" x2="280" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <circle cx="280" cy="725" r="10" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="270" y1="725" x2="290" y2="725" stroke="#EC4899" strokeWidth="2"/>
+                            <line x1="280" y1="715" x2="280" y2="735" stroke="#EC4899" strokeWidth="2"/>
+                          </g>
+                          <text x="220" y="25" fill="#F9A8D4" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
+                            Column 1 CNOTs
                           </text>
                         </g>
                       )}
 
-                      {/* Step 2: Reed-Muller Encoding - CNOT gates from qubit 0 to ancillas 1-14 */}
-                      {currentStep >= 1 && (
-                        <g opacity={currentStep >= 2 ? 1 : 0.5}>
-                          {/* Pattern of CNOTs for [[15,1,3]] Reed-Muller code encoding */}
-                          {/* Control from qubit 0 (first Bell pair qubit) */}
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((targetIdx, idx) => {
-                            const xPos = 220 + idx * 28;
-                            const y0 = 50;
+                      {/* Step 2: Column 2 of CNOT gates */}
+                      {currentStep >= 2 && (
+                        <g opacity={currentStep >= 3 ? 1 : 0.5}>
+                          {/* Column 2 CNOT patterns */}
+                          {/* Qubit 3 (index 2) controls multiple qubits */}
+                          {[4, 5, 6, 8, 11, 12, 13, 14].map((targetIdx, idx) => {
+                            const xPos = 350;
+                            const y0 = 140;
                             const yTarget = 50 + targetIdx * 45;
                             
                             return (
-                              <g key={`cnot-${idx}`}>
-                                <circle cx={xPos} cy={y0} r="4" fill="#EC4899" filter="url(#glow)"/>
-                                <circle cx={xPos} cy={yTarget} r="8" fill="none" stroke="#EC4899" strokeWidth="2" filter="url(#glow)"/>
-                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#EC4899" strokeWidth="2"/>
-                                <line x1={xPos - 8} y1={yTarget} x2={xPos + 8} y2={yTarget} stroke="#EC4899" strokeWidth="2"/>
+                              <g key={`cnot-col2-3-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#10B981" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#10B981" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#10B981" strokeWidth="2"/>
                               </g>
                             );
                           })}
-                          <text x="400" y="20" fill="#F9A8D4" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
-                            Reed-Muller [[15,1,3]] Encoding
+                          {/* Qubit 5 (index 4) controls multiple qubits */}
+                          {[8, 11, 12].map((targetIdx, idx) => {
+                            const xPos = 380;
+                            const y0 = 230;
+                            const yTarget = 50 + targetIdx * 45;
+                            
+                            return (
+                              <g key={`cnot-col2-5-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#10B981" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#10B981" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#10B981" strokeWidth="2"/>
+                              </g>
+                            );
+                          })}
+                          {/* Qubit 6 (index 5) controls multiple qubits */}
+                          {[8, 11, 13].map((targetIdx, idx) => {
+                            const xPos = 410;
+                            const y0 = 275;
+                            const yTarget = 50 + targetIdx * 45;
+                            
+                            return (
+                              <g key={`cnot-col2-6-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#10B981" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#10B981" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#10B981" strokeWidth="2"/>
+                              </g>
+                            );
+                          })}
+                          {/* Qubit 7 (index 6) controls multiple qubits */}
+                          {[8, 12, 13].map((targetIdx, idx) => {
+                            const xPos = 440;
+                            const y0 = 320;
+                            const yTarget = 50 + targetIdx * 45;
+                            
+                            return (
+                              <g key={`cnot-col2-7-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#10B981" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#10B981" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#10B981" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#10B981" strokeWidth="2"/>
+                              </g>
+                            );
+                          })}
+                          <text x="395" y="25" fill="#6EE7B7" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
+                            Column 2 CNOTs
                           </text>
                         </g>
                       )}
 
-                      {/* Step 3: Transversal T†_L gates on all 15 encoded qubits */}
-                      {currentStep >= 2 && (
-                        <g opacity={currentStep >= 3 ? 1 : 0.5}>
-                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((i) => {
+                      {/* Step 3: Column 3 of CNOT gates */}
+                      {currentStep >= 3 && (
+                        <g opacity={currentStep >= 4 ? 1 : 0.5}>
+                          {/* Column 3 CNOT patterns */}
+                          {/* Qubit 9 (index 8) controls multiple qubits */}
+                          {[11, 13, 14].map((targetIdx, idx) => {
+                            const xPos = 520;
+                            const y0 = 410;
+                            const yTarget = 50 + targetIdx * 45;
+                            
+                            return (
+                              <g key={`cnot-col3-9-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#F59E0B" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#F59E0B" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#F59E0B" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#F59E0B" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#F59E0B" strokeWidth="2"/>
+                              </g>
+                            );
+                          })}
+                          {/* Qubit 10 (index 9) controls multiple qubits */}
+                          {[11, 12, 14].map((targetIdx, idx) => {
+                            const xPos = 550;
+                            const y0 = 455;
+                            const yTarget = 50 + targetIdx * 45;
+                            
+                            return (
+                              <g key={`cnot-col3-10-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#F59E0B" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#F59E0B" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#F59E0B" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#F59E0B" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#F59E0B" strokeWidth="2"/>
+                              </g>
+                            );
+                          })}
+                          {/* Qubit 11 (index 10) controls multiple qubits */}
+                          {[12, 13, 14].map((targetIdx, idx) => {
+                            const xPos = 580;
+                            const y0 = 500;
+                            const yTarget = 50 + targetIdx * 45;
+                            
+                            return (
+                              <g key={`cnot-col3-11-${idx}`}>
+                                {idx === 0 && <circle cx={xPos} cy={y0} r="4" fill="#F59E0B" filter="url(#glow)"/>}
+                                <line x1={xPos} y1={y0} x2={xPos} y2={yTarget} stroke="#F59E0B" strokeWidth="2"/>
+                                <circle cx={xPos} cy={yTarget} r="10" fill="none" stroke="#F59E0B" strokeWidth="2" filter="url(#glow)"/>
+                                <line x1={xPos - 10} y1={yTarget} x2={xPos + 10} y2={yTarget} stroke="#F59E0B" strokeWidth="2"/>
+                                <line x1={xPos} y1={yTarget - 10} x2={xPos} y2={yTarget + 10} stroke="#F59E0B" strokeWidth="2"/>
+                              </g>
+                            );
+                          })}
+                          <text x="550" y="25" fill="#FCD34D" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
+                            Column 3 CNOTs
+                          </text>
+                        </g>
+                      )}
+
+                      {/* Step 4: Column 4 of CNOT gates */}
+                      {currentStep >= 4 && (
+                        <g opacity={currentStep >= 5 ? 1 : 0.5}>
+                          {/* Column 4 CNOT patterns */}
+                          {/* Qubit 12 (index 11) controls qubit 14 (index 13) */}
+                          <g>
+                            <circle cx="650" cy="545" r="4" fill="#A78BFA" filter="url(#glow)"/>
+                            <line x1="650" y1="545" x2="650" y2="635" stroke="#A78BFA" strokeWidth="2"/>
+                            <circle cx="650" cy="635" r="10" fill="none" stroke="#A78BFA" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="640" y1="635" x2="660" y2="635" stroke="#A78BFA" strokeWidth="2"/>
+                            <line x1="650" y1="625" x2="650" y2="645" stroke="#A78BFA" strokeWidth="2"/>
+                          </g>
+                          {/* Qubit 13 (index 12) controls qubit 14 (index 13) */}
+                          <g>
+                            <circle cx="670" cy="590" r="4" fill="#A78BFA" filter="url(#glow)"/>
+                            <line x1="670" y1="590" x2="670" y2="635" stroke="#A78BFA" strokeWidth="2"/>
+                            <circle cx="670" cy="635" r="10" fill="none" stroke="#A78BFA" strokeWidth="2" filter="url(#glow)"/>
+                            <line x1="660" y1="635" x2="680" y2="635" stroke="#A78BFA" strokeWidth="2"/>
+                            <line x1="670" y1="625" x2="670" y2="645" stroke="#A78BFA" strokeWidth="2"/>
+                          </g>
+                          <text x="660" y="25" fill="#DDD6FE" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
+                            Column 4 CNOTs
+                          </text>
+                        </g>
+                      )}
+
+                      {/* Step 5: T†_L gates on all 15 qubits */}
+                      {currentStep >= 5 && (
+                        <g>
+                          {Array.from({ length: 15 }, (_, i) => {
                             const y = 50 + i * 45;
                             return (
                               <g key={`tl-${i}`}>
                                 <rect
-                                  x="640"
+                                  x="740"
                                   y={y - 14}
-                                  width="40"
+                                  width="45"
                                   height="28"
-                                  fill="#10B981"
+                                  fill="#8B5CF6"
                                   fillOpacity="0.3"
-                                  stroke="#10B981"
+                                  stroke="#8B5CF6"
                                   strokeWidth="2"
                                   rx="3"
                                   filter="url(#glow)"
                                 />
-                                <text x="660" y={y + 5} fill="#D1FAE5" fontSize="11" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
+                                <text x="762" y={y + 5} fill="#DDD6FE" fontSize="11" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
                                   T†_L
                                 </text>
                               </g>
                             );
                           })}
-                          <text x="660" y="20" fill="#6EE7B7" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
-                            Transversal T†_L Gates
+                          <text x="762" y="25" fill="#C4B5FD" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
+                            Transversal T†_L
                           </text>
                         </g>
                       )}
 
-                      {/* Step 4: X_L Measurements on first 15 qubits */}
-                      {currentStep >= 3 && (
-                        <g opacity={currentStep >= 4 ? 1 : 0.5}>
+                      {/* Step 6: M_X Measurements on all 15 qubits */}
+                      {currentStep >= 5 && (
+                        <g>
                           {Array.from({ length: 15 }, (_, i) => {
                             const y = 50 + i * 45;
                             return (
                               <g key={`mx-${i}`}>
                                 <rect
-                                  x="740"
+                                  x="830"
                                   y={y - 15}
-                                  width="40"
+                                  width="45"
                                   height="30"
-                                  fill="#F59E0B"
+                                  fill="#EC4899"
                                   fillOpacity="0.3"
-                                  stroke="#F59E0B"
+                                  stroke="#EC4899"
                                   strokeWidth="2"
                                   rx="4"
                                   filter="url(#glow)"
                                 />
-                                <text x="760" y={y + 4} fill="#FEF3C7" fontSize="11" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
+                                <text x="852" y={y + 4} fill="#FEF3C7" fontSize="11" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
                                   M_X
                                 </text>
                               </g>
                             );
                           })}
-                          <text x="760" y="20" fill="#FCD34D" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
+                          <text x="852" y="25" fill="#F9A8D4" fontSize="12" textAnchor="middle" fontFamily="Space Grotesk">
                             X_L Measurements
                           </text>
                         </g>
                       )}
 
-                      {/* Step 5: Output state |ψ_L⟩ on qubit 16 (second Bell pair qubit) */}
-                      {currentStep >= 4 && (
-                        <g opacity={currentStep >= 5 ? 1 : 0.5}>
-                          <line x1="800" y1="725" x2="840" y2="725" stroke="#8B5CF6" strokeWidth="3" filter="url(#glow)"/>
-                          <text x="820" y="710" fill="#DDD6FE" fontSize="14" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
+                      {/* Output state |ψ_L⟩ on qubit 16 */}
+                      {currentStep >= 5 && (
+                        <g>
+                          <line x1="890" y1="725" x2="920" y2="725" stroke="#10B981" strokeWidth="3" filter="url(#glow)"/>
+                          <text x="905" y="710" fill="#D1FAE5" fontSize="14" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
                             |ψ_L⟩
                           </text>
-                          <text x="820" y="750" fill="#A78BFA" fontSize="11" textAnchor="middle" fontFamily="Space Grotesk">
-                            Purified |A_L⟩
+                          <text x="905" y="750" fill="#6EE7B7" fontSize="11" textAnchor="middle" fontFamily="Space Grotesk">
+                            Output
                           </text>
                         </g>
-                      )}
-
-                      {/* Post-selection note */}
-                      {currentStep >= 5 && (
-                        <text x="450" y="780" fill="#F9A8D4" fontSize="13" textAnchor="middle" fontFamily="Space Grotesk" fontStyle="italic">
-                          Post-select: Keep |ψ_L⟩ based on measurement pattern
-                        </text>
                       )}
                     </svg>
                   </div>
 
                   {/* Step descriptions for 15-to-1 */}
                   <div className="space-y-3">
-                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 0 ? 'bg-purple-500/20 border border-purple-400/30' : 'bg-white/5 border border-white/10'}`}>
-                      <h4 className="font-semibold mb-1">Step 1: Create Bell Pair</h4>
-                      <p className="text-sm text-purple-200/70">
-                        Create a logical Bell pair |Φ⁺⟩. One qubit will be encoded (qubit 1), the other will become the output (qubit 16).
-                      </p>
-                    </div>
-                    
                     <div className={`p-4 rounded-lg transition-all ${currentStep >= 1 ? 'bg-pink-500/20 border border-pink-400/30' : 'bg-white/5 border border-white/10'}`}>
-                      <h4 className="font-semibold mb-1">Step 2: Reed-Muller Encoding</h4>
+                      <h4 className="font-semibold mb-1">Step 1: Column 1 CNOTs</h4>
                       <p className="text-sm text-pink-200/70">
-                        Encode one qubit from the Bell pair with 14 ancilla logical qubits using the [[15,1,3]] Reed-Muller code. This creates the 15-qubit encoded state.
+                        Apply first column of CNOT gates according to Reed-Muller code structure. Controls from qubits 1, 2, 3, 4, 8, 15 to qubit 16.
                       </p>
                     </div>
                     
                     <div className={`p-4 rounded-lg transition-all ${currentStep >= 2 ? 'bg-green-500/20 border border-green-400/30' : 'bg-white/5 border border-white/10'}`}>
-                      <h4 className="font-semibold mb-1">Step 3: Transversal T†_L Gates</h4>
+                      <h4 className="font-semibold mb-1">Step 2: Column 2 CNOTs</h4>
                       <p className="text-sm text-green-200/70">
-                        Apply T†_L gate to each of the 15 encoded qubits. The T†_L gate is transversal for the Reed-Muller code. The ancillae for these gates are the noisy |A_L⟩ states being purified.
+                        Apply second column of CNOT gates. Multiple controls from qubits 3, 5, 6, 7 to various target qubits.
                       </p>
                     </div>
                     
                     <div className={`p-4 rounded-lg transition-all ${currentStep >= 3 ? 'bg-amber-500/20 border border-amber-400/30' : 'bg-white/5 border border-white/10'}`}>
-                      <h4 className="font-semibold mb-1">Step 4: X_L Measurements</h4>
+                      <h4 className="font-semibold mb-1">Step 3: Column 3 CNOTs</h4>
                       <p className="text-sm text-amber-200/70">
-                        Measure all 15 encoded qubits in the X_L basis. The measurement pattern indicates whether to keep or discard the output state.
+                        Apply third column of CNOT gates. Controls from qubits 9, 10, 11 to multiple targets.
                       </p>
                     </div>
                     
                     <div className={`p-4 rounded-lg transition-all ${currentStep >= 4 ? 'bg-purple-500/20 border border-purple-400/30' : 'bg-white/5 border border-white/10'}`}>
-                      <h4 className="font-semibold mb-1">Step 5: Post-Selection</h4>
+                      <h4 className="font-semibold mb-1">Step 4: Column 4 CNOTs</h4>
                       <p className="text-sm text-purple-200/70">
-                        Based on the measurement pattern, either discard |ψ_L⟩ or keep it as a purified |A_L⟩ state (possibly with a Z_L byproduct operator). Success yields cubic error suppression.
+                        Apply final column of CNOT gates. Controls from qubits 12, 13 to qubit 14.
+                      </p>
+                    </div>
+                    
+                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 5 ? 'bg-purple-500/20 border border-purple-400/30' : 'bg-white/5 border border-white/10'}`}>
+                      <h4 className="font-semibold mb-1">Step 5: T†_L Gates and Measurements</h4>
+                      <p className="text-sm text-purple-200/70">
+                        Apply transversal T†_L gates to all 15 qubits, then measure in X_L basis. Post-select based on measurement outcomes to obtain purified |A_L⟩ state on qubit 16.
                       </p>
                     </div>
                   </div>
@@ -432,18 +611,46 @@ export default function MagicStateDistillation() {
                               </g>
                             );
                           })}
-                          <line x1="700" y1="60" x2="740" y2="60" stroke="#8B5CF6" strokeWidth="3"/>
-                          <text x="720" y="50" fill="#DDD6FE" fontSize="12" textAnchor="middle" fontFamily="JetBrains Mono">Output</text>
+                        </g>
+                      )}
+
+                      {/* Output */}
+                      {currentStep >= 4 && (
+                        <g>
+                          <line x1="650" y1="60" x2="700" y2="60" stroke="#10B981" strokeWidth="3"/>
+                          <text x="675" y="45" fill="#D1FAE5" fontSize="13" textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">|T⟩</text>
                         </g>
                       )}
                     </svg>
                   </div>
 
+                  {/* Step descriptions for simplified */}
                   <div className="space-y-3">
-                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 0 ? 'bg-purple-500/20 border border-purple-400/30' : 'bg-white/5 border border-white/10'}`}>
-                      <h4 className="font-semibold mb-1">Simplified Protocol</h4>
+                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 1 ? 'bg-purple-500/20 border border-purple-400/30' : 'bg-white/5 border border-white/10'}`}>
+                      <h4 className="font-semibold mb-1">Step 1: Apply T gates</h4>
                       <p className="text-sm text-purple-200/70">
-                        This 3-to-1 version demonstrates the key concepts: prepare noisy T-states, apply T gates, create correlations with CNOTs, measure syndromes, and post-select on measurement outcomes.
+                        Apply noisy T gates to three |+⟩ states. These are the states we want to purify.
+                      </p>
+                    </div>
+                    
+                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 2 ? 'bg-pink-500/20 border border-pink-400/30' : 'bg-white/5 border border-white/10'}`}>
+                      <h4 className="font-semibold mb-1">Step 2: CNOT Gates</h4>
+                      <p className="text-sm text-pink-200/70">
+                        Apply CNOT gates to entangle the qubits with ancilla states.
+                      </p>
+                    </div>
+                    
+                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 3 ? 'bg-green-500/20 border border-green-400/30' : 'bg-white/5 border border-white/10'}`}>
+                      <h4 className="font-semibold mb-1">Step 3: More T gates</h4>
+                      <p className="text-sm text-green-200/70">
+                        Apply additional T gates to complete the distillation circuit.
+                      </p>
+                    </div>
+                    
+                    <div className={`p-4 rounded-lg transition-all ${currentStep >= 4 ? 'bg-amber-500/20 border border-amber-400/30' : 'bg-white/5 border border-white/10'}`}>
+                      <h4 className="font-semibold mb-1">Step 4: Measure and Post-select</h4>
+                      <p className="text-sm text-amber-200/70">
+                        Measure ancilla qubits. If measurements are favorable, keep the output as a purified |T⟩ state.
                       </p>
                     </div>
                   </div>
@@ -454,78 +661,99 @@ export default function MagicStateDistillation() {
 
           {/* Right Column: Theory and Controls */}
           <div className="space-y-6">
-            {/* Noise Control */}
+            {/* Parameter Controls */}
             <Card className="p-6 bg-white/5 backdrop-blur-md border-white/10">
-              <h3 className="text-xl font-semibold mb-4">Noise Parameters</h3>
+              <h3 className="text-xl font-semibold mb-4">Input Parameters</h3>
+              
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <label className="text-sm text-purple-200/70">Input Error Rate (ε)</label>
-                    <span className="text-sm font-mono text-purple-300">{noise[0].toFixed(3)}</span>
+                    <label className="text-sm text-purple-200">Input Error Rate (ε)</label>
+                    <span className="text-sm font-mono text-purple-300">{inputError.toFixed(4)}</span>
                   </div>
                   <Slider
                     value={noise}
                     onValueChange={setNoise}
                     min={0.001}
-                    max={0.05}
+                    max={0.1}
                     step={0.001}
                     className="w-full"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                  <div>
-                    <p className="text-xs text-purple-200/50 mb-1">Input Fidelity</p>
-                    <p className="text-lg font-mono text-purple-300">{inputFidelity.toFixed(4)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-purple-200/50 mb-1">Output Fidelity</p>
-                    <p className="text-lg font-mono text-green-300">{outputFidelity.toFixed(4)}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-xs text-purple-200/50 mb-1">Improvement</p>
-                    <p className={`text-lg font-mono ${parseFloat(improvement) > 0 ? 'text-green-300' : 'text-red-300'}`}>
-                      {improvement}%
-                    </p>
-                  </div>
+                  <p className="text-xs text-purple-300/60 mt-1">
+                    Adjust the noise level of input |A_L⟩ states
+                  </p>
                 </div>
               </div>
             </Card>
 
-            {/* Theory */}
+            {/* Performance Metrics */}
             <Card className="p-6 bg-white/5 backdrop-blur-md border-white/10">
               <h3 className="text-xl font-semibold mb-4">Theoretical Performance</h3>
-              <div className="space-y-4 text-sm text-purple-200/70">
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30">
+                    <div className="text-sm text-purple-200/70 mb-1">Input Fidelity</div>
+                    <div className="text-2xl font-bold text-purple-100">{inputFidelity.toFixed(6)}</div>
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-400/30">
+                    <div className="text-sm text-green-200/70 mb-1">Output Fidelity</div>
+                    <div className="text-2xl font-bold text-green-100">{outputFidelity.toFixed(6)}</div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-400/30">
+                  <div className="text-sm text-amber-200/70 mb-1">Improvement</div>
+                  <div className="text-2xl font-bold text-amber-100">+{improvement}%</div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-black/30 border border-white/10">
+                  <h4 className="font-semibold mb-2 text-purple-200">Error Suppression Formula</h4>
+                  <div className="font-mono text-sm text-purple-100 bg-black/40 p-3 rounded">
+                    ε_out = 35 × ε³
+                  </div>
+                  <p className="text-xs text-purple-300/60 mt-2">
+                    Cubic error suppression for [[15,1,3]] Reed-Muller code
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Educational Content */}
+            <Card className="p-6 bg-white/5 backdrop-blur-md border-white/10">
+              <h3 className="text-xl font-semibold mb-4">Key Concepts</h3>
+              
+              <div className="space-y-3 text-sm text-purple-200/80">
                 <div>
-                  <h4 className="font-semibold text-purple-300 mb-2">Reed-Muller [[15,1,3]] Code</h4>
+                  <h4 className="font-semibold text-purple-100 mb-1">Reed-Muller Code [[15,1,3]]</h4>
                   <p>
-                    The 15-to-1 protocol uses the quantum Reed-Muller code to encode 1 logical qubit into 15 physical qubits with distance 3. The T†_L gate is transversal for this code.
+                    A quantum error-correcting code that encodes 1 logical qubit into 15 physical qubits with distance 3.
+                    Supports transversal T gates, making it ideal for magic state distillation.
                   </p>
                 </div>
-
+                
                 <div>
-                  <h4 className="font-semibold text-purple-300 mb-2">Error Suppression</h4>
-                  <p className="font-mono text-xs bg-black/30 p-3 rounded">
-                    ε_out ≈ 35 × ε_in³
-                  </p>
-                  <p className="mt-2">
-                    Cubic error suppression means errors decrease dramatically. At ε = 1%, output error is only 0.0035%.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-purple-300 mb-2">The Threshold Question</h4>
+                  <h4 className="font-semibold text-purple-100 mb-1">Transversal Gates</h4>
                   <p>
-                    Distillation only improves fidelity when hardware noise is below a threshold (~1-2% for this protocol). Above threshold, the 15-qubit overhead introduces more errors than the protocol corrects.
+                    Gates applied independently to each physical qubit. For Reed-Muller code, applying T to each of 15 qubits
+                    implements a logical T gate on the encoded qubit.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-purple-100 mb-1">Magic States |A_L⟩</h4>
+                  <p>
+                    Special quantum states that enable universal quantum computation when combined with Clifford gates.
+                    The |A_L⟩ state is an eigenstate of the logical T gate.
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-white/10">
-                  <h4 className="font-semibold text-purple-300 mb-2">Based on Research</h4>
-                  <p className="text-xs">
-                    Circuit structure from Bravyi & Haah (2012), "Magic State Distillation with Low Overhead"
-                    <br/>
-                    arXiv:1208.0928, Figure 33
+                <div>
+                  <h4 className="font-semibold text-purple-100 mb-1">Post-Selection</h4>
+                  <p>
+                    Based on measurement outcomes, we either keep or discard the output state. Success probability decreases
+                    with input error, but accepted states have much higher fidelity.
                   </p>
                 </div>
               </div>
