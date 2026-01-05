@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { PlayCircle, PauseCircle, RotateCcw } from "lucide-react";
+import { PlayCircle, PauseCircle, RotateCcw, FlaskConical } from "lucide-react";
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 /**
  * Design Philosophy: Holographic Quantum Aesthetic
@@ -17,6 +18,11 @@ export default function MagicStateDistillation() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [noise, setNoise] = useState([0.01]);
   const [activeTab, setActiveTab] = useState("full");
+  
+  // Simulation state
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationResult, setSimulationResult] = useState<any>(null);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
 
   // Animation control
   useEffect(() => {
@@ -54,6 +60,30 @@ export default function MagicStateDistillation() {
   const inputFidelity = 1 - inputError;
   const outputFidelity = 1 - outputError;
   const improvement = ((outputFidelity - inputFidelity) / inputFidelity * 100).toFixed(2);
+  
+  // Run quantum simulation
+  const runSimulation = async () => {
+    setIsSimulating(true);
+    setSimulationError(null);
+    
+    try {
+      const response = await axios.post('/api/simulate', {
+        shots: 2000,
+        error_rate: inputError,
+      });
+      
+      setSimulationResult(response.data);
+    } catch (error: any) {
+      console.error('Simulation error:', error);
+      setSimulationError(
+        error.response?.data?.error || 
+        error.message || 
+        'Failed to run simulation'
+      );
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1A0B2E] via-[#2D1B4E] to-[#1A0B2E] text-white">
@@ -688,7 +718,27 @@ export default function MagicStateDistillation() {
 
             {/* Performance Metrics */}
             <Card className="p-6 bg-white/5 backdrop-blur-md border-white/10">
-              <h3 className="text-xl font-semibold mb-4">Theoretical Performance</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">Theoretical Performance</h3>
+                <Button
+                  onClick={runSimulation}
+                  disabled={isSimulating}
+                  size="sm"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                >
+                  {isSimulating ? (
+                    <>
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Running...
+                    </>
+                  ) : (
+                    <>
+                      <FlaskConical className="mr-2 h-4 w-4" />
+                      Run Simulation
+                    </>
+                  )}
+                </Button>
+              </div>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -719,6 +769,97 @@ export default function MagicStateDistillation() {
                 </div>
               </div>
             </Card>
+
+            {/* Simulation Results */}
+            {(simulationResult || simulationError) && (
+              <Card className="p-6 bg-white/5 backdrop-blur-md border-white/10">
+                <h3 className="text-xl font-semibold mb-4">Simulation Results</h3>
+                
+                {simulationError && (
+                  <div className="p-4 rounded-lg bg-red-500/20 border border-red-400/30">
+                    <p className="text-red-200 text-sm">{simulationError}</p>
+                  </div>
+                )}
+                
+                {simulationResult && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30">
+                        <div className="text-sm text-cyan-200/70 mb-1">Simulated Fidelity</div>
+                        <div className="text-2xl font-bold text-cyan-100">
+                          {simulationResult.fidelity.toFixed(6)}
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-400/30">
+                        <div className="text-sm text-emerald-200/70 mb-1">Acceptance Rate</div>
+                        <div className="text-2xl font-bold text-emerald-100">
+                          {(simulationResult.acceptance_rate * 100).toFixed(2)}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/10">
+                      <h4 className="font-semibold mb-2 text-purple-200">Expectation Values</h4>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <span className="text-purple-300/70">⟨X⟩:</span>
+                          <span className="ml-2 font-mono text-purple-100">
+                            {simulationResult.expectation_values.x.toFixed(4)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-purple-300/70">⟨Y⟩:</span>
+                          <span className="ml-2 font-mono text-purple-100">
+                            {simulationResult.expectation_values.y.toFixed(4)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-purple-300/70">⟨Z⟩:</span>
+                          <span className="ml-2 font-mono text-purple-100">
+                            {simulationResult.expectation_values.z.toFixed(4)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/10">
+                      <h4 className="font-semibold mb-2 text-purple-200">Accepted Shots</h4>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <span className="text-purple-300/70">X basis:</span>
+                          <span className="ml-2 font-mono text-purple-100">
+                            {simulationResult.accepted_shots.x}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-purple-300/70">Y basis:</span>
+                          <span className="ml-2 font-mono text-purple-100">
+                            {simulationResult.accepted_shots.y}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-purple-300/70">Z basis:</span>
+                          <span className="ml-2 font-mono text-purple-100">
+                            {simulationResult.accepted_shots.z}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-purple-300/60 mt-2">
+                        Total shots: {simulationResult.total_shots} | Error rate: {simulationResult.error_rate.toFixed(4)}
+                      </p>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-400/20">
+                      <p className="text-xs text-blue-200/80">
+                        <strong>Note:</strong> Simulation uses Qiskit with noisy depolarizing channels and state tomography
+                        to reconstruct the density matrix. The fidelity is calculated from the reconstructed state.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
 
             {/* Educational Content */}
             <Card className="p-6 bg-white/5 backdrop-blur-md border-white/10">

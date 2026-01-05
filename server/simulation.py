@@ -1,0 +1,301 @@
+#!/usr/bin/env python3
+"""
+15-to-1 Reed-Muller magic state distillation simulation with state tomography.
+"""
+
+from __future__ import annotations
+import math
+import json
+import sys
+from dataclasses import dataclass
+from typing import List, Dict, Tuple
+import numpy as np
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel, depolarizing_error
+
+
+@dataclass(frozen=True)
+class StabilizerSpec:
+    pauli: str
+    support: Tuple[int, ...]
+
+
+class MGDDistillation:
+    """
+    15-to-1 Reed-Muller magic state distillation (state-level simulation).
+    We add state tomography of the (conditional) output qubit by measuring it in X/Y/Z
+    bases, conditioned on acceptance (syn == 0).
+    """
+
+    def __init__(self):
+        self.stabilizers: List[StabilizerSpec] = self._rm15_generators()
+
+    @staticmethod
+    def _rm15_generators() -> List[StabilizerSpec]:
+        x1 = (7, 8, 9, 10, 11, 12, 13, 14)
+        x2 = (3, 4, 5, 6, 11, 12, 13, 14)
+        x3 = (1, 2, 5, 6, 9, 10, 13, 14)
+        x4 = (0, 2, 4, 6, 8, 10, 12, 14)
+        z1, z2, z3, z4 = x1, x2, x3, x4
+        z12 = (11, 12, 13, 14)
+        z13 = (9, 10, 13, 14)
+        z14 = (8, 10, 12, 14)
+        z23 = (5, 6, 13, 14)
+        z24 = (4, 6, 12, 14)
+        z34 = (2, 6, 10, 14)
+        return [
+            StabilizerSpec("X", x1),
+            StabilizerSpec("X", x2),
+            StabilizerSpec("X", x3),
+            StabilizerSpec("X", x4),
+            StabilizerSpec("Z", z1),
+            StabilizerSpec("Z", z2),
+            StabilizerSpec("Z", z3),
+            StabilizerSpec("Z", z4),
+            StabilizerSpec("Z", z12),
+            StabilizerSpec("Z", z13),
+            StabilizerSpec("Z", z14),
+            StabilizerSpec("Z", z23),
+            StabilizerSpec("Z", z24),
+            StabilizerSpec("Z", z34),
+        ]
+
+    @staticmethod
+    def _prepare_raw_T_states(qc: QuantumCircuit, data: QuantumRegister) -> None:
+        for i in range(len(data)):
+            qc.h(data[i])
+            qc.t(data[i])
+
+    @staticmethod
+    def _measure_css_stabilizer(
+        qc: QuantumCircuit,
+        data: QuantumRegister,
+        anc,
+        syn_bit,
+        stab: StabilizerSpec,
+    ) -> None:
+        qc.reset(anc)
+        if stab.pauli == "Z":
+            for j in stab.support:
+                qc.cx(data[j], anc)
+            qc.measure(anc, syn_bit)
+        elif stab.pauli == "X":
+            qc.h(anc)
+            for j in stab.support:
+                qc.cx(anc, data[j])
+            qc.h(anc)
+            qc.measure(anc, syn_bit)
+        else:
+            raise ValueError("stab.pauli must be 'X' or 'Z'.")
+
+    def construct_circuit(self, out_basis: str = "Z") -> QuantumCircuit:
+        """
+        out_basis in {'X','Y','Z'} determines how we measure the output qubit,
+        but ONLY when accepted (syn == 0).
+        """
+        if out_basis not in {"X", "Y", "Z"}:
+            raise ValueError("out_basis must be one of {'X','Y','Z'}.")
+        data = QuantumRegister(15, "f")
+        anc = QuantumRegister(1, "a")
+        syn = ClassicalRegister(14, "syn")
+        out = ClassicalRegister(1, "out")
+        qc = QuantumCircuit(data, anc, syn, out, name=f"RM15_15to1_T_{out_basis}")
+        self._prepare_raw_T_states(qc, data)
+        for k, stab in enumerate(self.stabilizers):
+            self._measure_css_stabilizer(qc, data, anc[0], syn[k], stab)
+        # Conditionally measure output in requested basis
+        with qc.if_test((syn, 0)):
+            # Apply transversal basis change gates
+            if out_basis == "X":
+                for i in range(15):
+                    qc.h(data[i])
+            elif out_basis == "Y":
+                for i in range(15):
+                    qc.sdg(data[i])
+                    qc.h(data[i])
+            # Z basis: do nothing
+            # Now measure logical Z (product of all Z)
+            qc.reset(anc[0])
+            for j in range(15):
+                qc.cx(data[j], anc[0])
+            qc.measure(anc[0], out[0])
+        return qc
+
+    @staticmethod
+    def _parse_counts(counts: Dict[str, int]) -> List[Tuple[int, int, int]]:
+        """
+        Robust parsing:
+          - Identify syn as the 14-bit substring and out as the 1-bit substring,
+            regardless of which appears first.
+        Returns (syn_val, out_bit, weight).
+        """
+        parsed: List[Tuple[int, int, int]] = []
+        for key, w in counts.items():
+            parts = key.split()
+            if len(parts) == 2:
+                a, b = parts
+                if len(a) == 14 and len(b) == 1:
+                    syn_str, out_str = a, b
+                elif len(a) == 1 and len(b) == 14:
+                    out_str, syn_str = a, b
+                else:
+                    raise ValueError(f"Unexpected key format: {key}")
+            elif len(parts) == 1:
+                s = parts[0]
+                # Total classical bits should be 15 (=14 syn + 1 out).
+                if len(s) != 15:
+                    raise ValueError(f"Unexpected key length {len(s)} for key: {key}")
+                # If no spaces, we'll assume last bit is out and preceding 14 are syn.
+                syn_str, out_str = s[:-1], s[-1:]
+            else:
+                # Handle empty or malformed keys
+                continue
+            syn_val = int(syn_str, 2)
+            out_bit = int(out_str, 2)
+            parsed.append((syn_val, out_bit, w))
+        return parsed
+
+    @staticmethod
+    def _accepted_expectation(counts: Dict[str, int]) -> Tuple[float, float]:
+        """
+        Returns (accept_rate, E[(-1)^out | accept]).
+        """
+        parsed = MGDDistillation._parse_counts(counts)
+        total = sum(w for _, _, w in parsed)
+        acc = 0
+        num = 0
+        for syn_val, out_bit, w in parsed:
+            if syn_val == 0:
+                acc += w
+                num += w * (1 if out_bit == 0 else -1)
+        accept_rate = acc / total if total else 0.0
+        exp = num / acc if acc else 0.0
+        return accept_rate, exp
+
+    @staticmethod
+    def _accepted_shots(counts: Dict[str, int]) -> int:
+        parsed = MGDDistillation._parse_counts(counts)
+        return sum(w for syn_val, _, w in parsed if syn_val == 0)
+
+    @staticmethod
+    def reconstruct_density_matrix(x: float, y: float, z: float) -> np.ndarray:
+        identity = np.eye(2, dtype=complex)
+        pauli_x = np.array([[0, 1], [1, 0]], dtype=complex)
+        pauli_y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+        pauli_z = np.array([[1, 0], [0, -1]], dtype=complex)
+        rho = 0.5 * (identity + x * pauli_x + y * pauli_y + z * pauli_z)
+        return rho
+
+    @staticmethod
+    def ideal_T_state() -> np.ndarray:
+        c = math.cos(math.pi / 4.0)
+        s = math.sin(math.pi / 4.0)
+        phase = complex(math.cos(math.pi / 4.0), math.sin(math.pi / 4.0))  # e^{i pi/4}
+        return np.array([c, phase * s], dtype=complex)
+
+    @staticmethod
+    def fidelity_to_T(rho: np.ndarray) -> float:
+        t = MGDDistillation.ideal_T_state()
+        return float(np.real(np.conjugate(t).T @ (rho @ t)))
+
+    def run_tomography(
+        self, shots: int = 10000, error_rate: float = 0.0
+    ) -> Dict:
+        """
+        Run state tomography with optional noise.
+        
+        Args:
+            shots: Number of measurement shots per basis
+            error_rate: Depolarizing error rate (0.0 = noiseless)
+            
+        Returns:
+            Dictionary with simulation results
+        """
+        # Create simulator with optional noise
+        if error_rate > 0:
+            noise_model = NoiseModel()
+            # Add depolarizing error to all single-qubit gates
+            error = depolarizing_error(error_rate, 1)
+            noise_model.add_all_qubit_quantum_error(error, ['h', 't', 'sdg', 'reset'])
+            # Add depolarizing error to two-qubit gates
+            error_2q = depolarizing_error(error_rate * 2, 2)
+            noise_model.add_all_qubit_quantum_error(error_2q, ['cx'])
+            sim = AerSimulator(noise_model=noise_model)
+        else:
+            sim = AerSimulator()
+
+        exps: Dict[str, float] = {}
+        accs: Dict[str, float] = {}
+        acc_shots: Dict[str, int] = {}
+        
+        for basis in ["X", "Y", "Z"]:
+            qc = self.construct_circuit(out_basis=basis)
+            result = sim.run(qc, shots=shots).result()
+            counts = result.get_counts(qc)
+            acc_rate, exp = self._accepted_expectation(counts)
+            accs[basis] = acc_rate
+            exps[basis] = exp
+            acc_shots[basis] = self._accepted_shots(counts)
+
+        x, y, z = exps["X"], exps["Y"], exps["Z"]
+        rho = self.reconstruct_density_matrix(x, y, z)
+        F = self.fidelity_to_T(rho)
+
+        # Calculate average acceptance rate
+        avg_accept_rate = sum(accs.values()) / len(accs)
+
+        return {
+            "fidelity": float(F),
+            "acceptance_rate": float(avg_accept_rate),
+            "expectation_values": {
+                "x": float(x),
+                "y": float(y),
+                "z": float(z),
+            },
+            "accepted_shots": {
+                "x": int(acc_shots["X"]),
+                "y": int(acc_shots["Y"]),
+                "z": int(acc_shots["Z"]),
+            },
+            "total_shots": int(shots),
+            "error_rate": float(error_rate),
+            "density_matrix": {
+                "real": rho.real.tolist(),
+                "imag": rho.imag.tolist(),
+            },
+        }
+
+
+def main():
+    """
+    Command-line interface for running simulations.
+    Expects JSON input: {"shots": 10000, "error_rate": 0.01}
+    """
+    try:
+        # Read parameters from stdin
+        if len(sys.argv) > 1:
+            params = json.loads(sys.argv[1])
+        else:
+            params = json.load(sys.stdin)
+
+        shots = params.get("shots", 10000)
+        error_rate = params.get("error_rate", 0.0)
+
+        distiller = MGDDistillation()
+        result = distiller.run_tomography(shots=shots, error_rate=error_rate)
+
+        # Output JSON result
+        print(json.dumps(result, indent=2))
+
+    except Exception as e:
+        error_result = {
+            "error": str(e),
+            "type": type(e).__name__,
+        }
+        print(json.dumps(error_result, indent=2))
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
