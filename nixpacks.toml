@@ -1,0 +1,18 @@
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "python311", "python311Packages.pip"]
+
+[phases.install]
+cmds = [
+  "npm install -g pnpm@10.4.1",
+  "pnpm install",
+  "pip install --user qiskit qiskit-aer numpy"
+]
+
+[phases.build]
+cmds = [
+  "pnpm build",
+  "cp server/simulation.py dist/simulation.py"
+]
+
+[start]
+cmd = "node dist/index.js"
