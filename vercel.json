@@ -1,10 +1,20 @@
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "pnpm build && cp server/simulation.py dist/simulation.py",
   "outputDirectory": "dist/public",
   "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install && pip3 install --user qiskit qiskit-aer numpy",
   "framework": null,
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 300
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
