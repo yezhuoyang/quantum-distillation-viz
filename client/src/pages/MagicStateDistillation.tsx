@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { PlayCircle, PauseCircle, RotateCcw, FlaskConical } from "lucide-react";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { runDistillationSimulation, type SimulationResult } from "../utils/quantumSimulator";
 
 /**
  * Design Philosophy: Holographic Quantum Aesthetic
@@ -61,24 +61,19 @@ export default function MagicStateDistillation() {
   const outputFidelity = 1 - outputError;
   const improvement = ((outputFidelity - inputFidelity) / inputFidelity * 100).toFixed(2);
   
-  // Run quantum simulation
+  // Run quantum simulation (frontend-only)
   const runSimulation = async () => {
     setIsSimulating(true);
     setSimulationError(null);
     
     try {
-      const response = await axios.post('/api/simulate', {
-        shots: 2000,
-        error_rate: inputError,
-      });
-      
-      setSimulationResult(response.data);
+      // Run frontend quantum simulation
+      const result = await runDistillationSimulation(2000, inputError);
+      setSimulationResult(result);
     } catch (error: any) {
       console.error('Simulation error:', error);
       setSimulationError(
-        error.response?.data?.error || 
-        error.message || 
-        'Failed to run simulation'
+        error.message || 'Failed to run simulation'
       );
     } finally {
       setIsSimulating(false);
